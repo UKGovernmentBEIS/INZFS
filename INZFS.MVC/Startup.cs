@@ -87,7 +87,7 @@ namespace INZFS.MVC
             .UseDisplayDriver<ProjectSummaryDriver>()
             .AddHandler<ProjectSummaryPartHandler>();
 
-            services.AddScoped<IDataMigration, ProjectSummaryMigration>();
+            services.AddScoped<IDataMigration, TestSunilContainerMigration>();
             
 
             services.AddContentPart<ProjectDetailsPart>()
@@ -127,6 +127,12 @@ namespace INZFS.MVC
                 .UseDisplayDriver<ApplicationDocumentDriver>()
                   .AddHandler<ApplicationDocumentPartHandler>();
             services.AddScoped<IDataMigration, ApplicationDocumentMigration>();
+
+
+            //services.AddContentPart<TestSunilBagPart>();
+            //services.AddScoped<IDataMigration, TestSunilBagPartMigration>();
+            services.AddScoped<IDataMigration, TestSunilContainerMigration>();
+
         }
         public override void Configure(IApplicationBuilder builder, IEndpointRouteBuilder routes, IServiceProvider serviceProvider)
         {

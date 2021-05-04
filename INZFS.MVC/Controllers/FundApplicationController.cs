@@ -34,6 +34,7 @@ using INZFS.MVC.Drivers;
 using System.Linq.Expressions;
 using INZFS.MVC.Models.ProposalFinance;
 using INZFS.MVC.ViewModels.ProposalFinance;
+using OrchardCore.Flows.Models;
 
 namespace INZFS.MVC.Controllers
 {
@@ -147,14 +148,28 @@ namespace INZFS.MVC.Controllers
                 return NotFound();
             }
 
-            Expression<Func<ContentItemIndex, bool>> expression = index => index.ContentType == contentType;
-            var contentItems = await GetContentItems(expression);
+            Expression<Func<ContentItemIndex, bool>> expression = index => index.ContentType == "INZFSApplicationContainer";
+            var containerContentItems = await GetContentItems(expression);
 
-            if (contentItems.Any())
+            var isEditMode = false;
+
+            if(containerContentItems.Any())
             {
-                var existingContentItem = contentItems.First();
+                var existingContainerContentItem = containerContentItems.First();
+                var applicationContainer = existingContainerContentItem?.ContentItem.As<BagPart>();
+                var existingContentItem = applicationContainer.ContentItems.First(ci => ci.ContentType == contentType);
+
                 return await Edit(existingContentItem.ContentItemId, contentType);
             }
+
+
+
+
+            //if (contentItems.Any())
+            //{
+            //    var existingContentItem = contentItems.First();
+            //    return await Edit(existingContentItem.ContentItemId, contentType);
+            //}
             var newContentItem = await _contentManager.NewAsync(contentType);
             var model = await _contentItemDisplayManager.BuildEditorAsync(newContentItem, _updateModelAccessor.ModelUpdater, true);
 
@@ -358,7 +373,19 @@ namespace INZFS.MVC.Controllers
         [HttpGet]
         public async Task<IActionResult> Edit(string contentItemId, string contentName)
         {
+            /*
             var contentItem = await _contentManager.GetAsync(contentItemId, VersionOptions.Latest);
+
+            if (contentItem == null)
+                return NotFound();
+            */
+
+            Expression<Func<ContentItemIndex, bool>> expression = index => index.ContentType == "INZFSApplicationContainer";
+            var containerContentItems = await GetContentItems(expression);
+
+            var existingContainerContentItem = containerContentItems.First();
+            var applicationContainer = existingContainerContentItem?.ContentItem.As<BagPart>();
+            var contentItem = applicationContainer.ContentItems.First(ci => ci.ContentItemId == contentItemId);
 
             if (contentItem == null)
                 return NotFound();
@@ -373,20 +400,24 @@ namespace INZFS.MVC.Controllers
         public async Task<IActionResult> EditAndPublishPOST(string contentItemId, [Bind(Prefix = "submit.Publish")] string submitPublish, string returnUrl, IFormFile? file)
         {
             var stayOnSamePage = submitPublish == "submit.PublishAndContinue";
-
+            /*
+            
             var content = await _contentManager.GetAsync(contentItemId, VersionOptions.Latest);
 
             if (content == null)
             {
                 return NotFound();
             }
-            if(file != null)
+            */
+
+            if (file != null)
             {
                 var errorMessage = await Validate(file);
 
                 if (!string.IsNullOrEmpty(errorMessage))
                 {
                     ViewBag.ErrorMessage = errorMessage;
+                    var content = await _contentManager.GetAsync(contentItemId, VersionOptions.Latest); // THIS IS NOT NECESSARY
                     return await Edit(contentItemId,content.ContentType);
                 }
                 var publicUrl = await SaveFile(file, contentItemId);
@@ -407,12 +438,21 @@ namespace INZFS.MVC.Controllers
 
         private async Task<IActionResult> EditPOST(string contentItemId, string returnUrl, bool stayOnSamePage, Func<ContentItem, Task> conditionallyPublish)
         {
+            /*
             var contentItem = await _contentManager.GetAsync(contentItemId, VersionOptions.DraftRequired);
 
             if (contentItem == null)
             {
                 return NotFound();
             }
+            */
+
+            Expression<Func<ContentItemIndex, bool>> expression = index => index.ContentType == "INZFSApplicationContainer";
+            var containerContentItems = await GetContentItems(expression);
+
+            var existingContainerContentItem = containerContentItems.First();
+            var applicationContainer = existingContainerContentItem?.ContentItem.As<BagPart>();
+            var contentItem = applicationContainer.ContentItems.First(ci => ci.ContentItemId == contentItemId);
 
             var model = await _contentItemDisplayManager.UpdateEditorAsync(contentItem, _updateModelAccessor.ModelUpdater, false);
             if (!ModelState.IsValid)
@@ -421,10 +461,10 @@ namespace INZFS.MVC.Controllers
                 return View("Edit", model);
             }
 
-
-            _session.Save(contentItem);
-
-            await conditionallyPublish(contentItem);
+            _session.Save(existingContainerContentItem); // NOT WORKING
+            await conditionallyPublish(existingContainerContentItem);
+            //_session.Save(contentItem);
+            //await conditionallyPublish(contentItem);
 
             var nextPageUrl = GetNextPageUrl(contentItem.ContentType);
             if (string.IsNullOrEmpty(nextPageUrl))
