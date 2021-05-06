@@ -14,7 +14,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="OrchardCore.ContentManagement.Abstractions" Version="1.0.0-rc2-15904" />
+    <!--<PackageReference Include="OrchardCore.ContentManagement.Abstractions" Version="1.0.0-rc2-15904" />-->
     <PackageReference Include="OrchardCore.Forms" Version="1.0.0-rc2-13450" />
     <PackageReference Include="OrchardCore.Module.Targets" Version="1.0.0-rc2-15867" />
     <PackageReference Include="OrchardCore.ContentManagement" Version="1.0.0-rc2-15867" />
@@ -31,5 +31,9 @@
 
   <ItemGroup>
     <Content Include="Views\FinanceBalanceSheetPart.Edit.cshtml" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\OriginalOrchardCode\OrchardCore\src\OrchardCore\OrchardCore.ContentManagement.Abstractions\OrchardCore.ContentManagement.Abstractions.csproj" />
   </ItemGroup>
 </Project>

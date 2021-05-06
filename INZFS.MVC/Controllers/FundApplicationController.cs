@@ -35,6 +35,7 @@ using System.Linq.Expressions;
 using INZFS.MVC.Models.ProposalFinance;
 using INZFS.MVC.ViewModels.ProposalFinance;
 using OrchardCore.Flows.Models;
+using Newtonsoft.Json.Linq;
 
 namespace INZFS.MVC.Controllers
 {
@@ -451,8 +452,44 @@ namespace INZFS.MVC.Controllers
             var containerContentItems = await GetContentItems(expression);
 
             var existingContainerContentItem = containerContentItems.First();
+            var applicationContainer = existingContainerContentItem?.ContentItem;
+
+            /*
+            try
+            {
+                var content = (JToken)applicationContainer.Content;
+                var somedata = content["BagPart"]["ContentItems"]; 
+                foreach (var token in content)
+                {
+                    var test = token;
+                }
+            }
+            catch (Exception ex)
+            {
+
+                throw;
+            }
+
+            try
+            {
+                var contentitems = applicationContainer.Content.BagPart.ContentItems;
+            }
+            catch (Exception ex)
+            {
+
+                throw;
+            }
+            */
+
+
+
+            /*
             var applicationContainer = existingContainerContentItem?.ContentItem.As<BagPart>();
             var contentItem = applicationContainer.ContentItems.First(ci => ci.ContentItemId == contentItemId);
+            */
+
+            var bagPartContainer = existingContainerContentItem?.ContentItem.As<BagPart>();
+            var contentItem = bagPartContainer.ContentItems.First(ci => ci.ContentItemId == contentItemId);
 
             var model = await _contentItemDisplayManager.UpdateEditorAsync(contentItem, _updateModelAccessor.ModelUpdater, false);
             if (!ModelState.IsValid)
@@ -460,6 +497,27 @@ namespace INZFS.MVC.Controllers
                 _session.Cancel();
                 return View("Edit", model);
             }
+
+            var contentitems = applicationContainer.Content.BagPart.ContentItems;
+            foreach (var token in contentitems)
+            {
+                var jsonData = token.ToString();
+                var contentItemToUpdate = (ContentItem)Newtonsoft.Json.JsonConvert.DeserializeObject<ContentItem>(jsonData);
+                var contentToken = (JToken)token;
+                var contentId = contentToken["ContentItemId"].Value<string>();
+                if(contentId == contentItem.ContentItemId)
+                {
+                    contentItemToUpdate.Merge((object)contentItem,
+                   new JsonMergeSettings { MergeArrayHandling = MergeArrayHandling.Replace, MergeNullValueHandling = MergeNullValueHandling.Merge });
+
+                    existingContainerContentItem.Merge((object)contentItemToUpdate,
+                    new JsonMergeSettings { MergeArrayHandling = MergeArrayHandling.Replace, MergeNullValueHandling = MergeNullValueHandling.Merge });
+                    break;
+                }
+            }
+
+            var newitem = existingContainerContentItem.Merge(contentItem,
+                    new JsonMergeSettings { MergeArrayHandling = MergeArrayHandling.Replace, MergeNullValueHandling = MergeNullValueHandling.Merge });
 
             _session.Save(existingContainerContentItem); // NOT WORKING
             await conditionallyPublish(existingContainerContentItem);
