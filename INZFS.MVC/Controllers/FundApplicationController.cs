@@ -59,11 +59,12 @@ namespace INZFS.MVC.Controllers
         private string[] permittedExtensions = { ".txt", ".pdf", ".xls", ".xlsx", ".doc",".docx" };
         private readonly ILogger _logger;
         private readonly ClamClient _clam;
+        private readonly ITypeActivatorFactory<ContentPart> _contentPartFactory;
 
         public FundApplicationController(ILogger<FundApplicationController> logger, ClamClient clam, IContentManager contentManager, IMediaFileStore mediaFileStore, IContentDefinitionManager contentDefinitionManager,
             IContentItemDisplayManager contentItemDisplayManager, IHtmlLocalizer<FundApplicationController> htmlLocalizer,
             INotifier notifier, YesSql.ISession session, IShapeFactory shapeFactory, ISiteService siteService,
-            IUpdateModelAccessor updateModelAccessor, INavigation navigation)
+            IUpdateModelAccessor updateModelAccessor, INavigation navigation, ITypeActivatorFactory<ContentPart> contentPartFactory)
         {
             _contentManager = contentManager;
             _mediaFileStore = mediaFileStore;
@@ -78,6 +79,7 @@ namespace INZFS.MVC.Controllers
             H = htmlLocalizer;
             New = shapeFactory;
             _navigation = navigation;
+            _contentPartFactory = contentPartFactory;
         }
 
         [HttpGet]
@@ -452,79 +454,35 @@ namespace INZFS.MVC.Controllers
             var containerContentItems = await GetContentItems(expression);
 
             var existingContainerContentItem = containerContentItems.First();
+
+            /*
+            var contentTypeDefinition = _contentDefinitionManager.LoadTypeDefinition("INZFSApplicationContainer");
+            var activator = _contentPartFactory.GetTypeActivator("BagPart");
+            var contentPart = (ContentPart)(existingContainerContentItem.Get(activator.Type, "BagPart") ?? activator.CreateInstance());
+            var bagPart = (BagPart)contentPart;
+
+            bagPart.ContentItem = existingContainerContentItem;
+            */
+            
             var applicationContainer = existingContainerContentItem?.ContentItem;
-
-            /*
-            try
-            {
-                var content = (JToken)applicationContainer.Content;
-                var somedata = content["BagPart"]["ContentItems"]; 
-                foreach (var token in content)
-                {
-                    var test = token;
-                }
-            }
-            catch (Exception ex)
-            {
-
-                throw;
-            }
-
-            try
-            {
-                var contentitems = applicationContainer.Content.BagPart.ContentItems;
-            }
-            catch (Exception ex)
-            {
-
-                throw;
-            }
-            */
-
-
-
-            /*
-            var applicationContainer = existingContainerContentItem?.ContentItem.As<BagPart>();
-            var contentItem = applicationContainer.ContentItems.First(ci => ci.ContentItemId == contentItemId);
-            */
-
-            var bagPartContainer = existingContainerContentItem?.ContentItem.As<BagPart>();
-            var contentItem = bagPartContainer.ContentItems.First(ci => ci.ContentItemId == contentItemId);
-
-            var model = await _contentItemDisplayManager.UpdateEditorAsync(contentItem, _updateModelAccessor.ModelUpdater, false);
+            var bagPart = existingContainerContentItem?.ContentItem.As<BagPart>();
+            bagPart.ContentItem = existingContainerContentItem;
+            
+            var contentItemToUpdate = bagPart.ContentItems.First(ci => ci.ContentItemId == contentItemId);
+            var model = await _contentItemDisplayManager.UpdateEditorAsync(contentItemToUpdate, _updateModelAccessor.ModelUpdater, false);
             if (!ModelState.IsValid)
             {
                 _session.Cancel();
                 return View("Edit", model);
             }
+            
+            bagPart.ContentItem.Apply(nameof(BagPart), bagPart);
+            
 
-            var contentitems = applicationContainer.Content.BagPart.ContentItems;
-            foreach (var token in contentitems)
-            {
-                var jsonData = token.ToString();
-                var contentItemToUpdate = (ContentItem)Newtonsoft.Json.JsonConvert.DeserializeObject<ContentItem>(jsonData);
-                var contentToken = (JToken)token;
-                var contentId = contentToken["ContentItemId"].Value<string>();
-                if(contentId == contentItem.ContentItemId)
-                {
-                    contentItemToUpdate.Merge((object)contentItem,
-                   new JsonMergeSettings { MergeArrayHandling = MergeArrayHandling.Replace, MergeNullValueHandling = MergeNullValueHandling.Merge });
-
-                    existingContainerContentItem.Merge((object)contentItemToUpdate,
-                    new JsonMergeSettings { MergeArrayHandling = MergeArrayHandling.Replace, MergeNullValueHandling = MergeNullValueHandling.Merge });
-                    break;
-                }
-            }
-
-            var newitem = existingContainerContentItem.Merge(contentItem,
-                    new JsonMergeSettings { MergeArrayHandling = MergeArrayHandling.Replace, MergeNullValueHandling = MergeNullValueHandling.Merge });
-
-            _session.Save(existingContainerContentItem); // NOT WORKING
+            _session.Save(existingContainerContentItem);
             await conditionallyPublish(existingContainerContentItem);
-            //_session.Save(contentItem);
-            //await conditionallyPublish(contentItem);
-
-            var nextPageUrl = GetNextPageUrl(contentItem.ContentType);
+            
+            var nextPageUrl = GetNextPageUrl(contentItemToUpdate.ContentType);
             if (string.IsNullOrEmpty(nextPageUrl))
             {
                 return NotFound();
