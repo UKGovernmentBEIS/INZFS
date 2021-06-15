@@ -1,0 +1,31 @@
+
+@model RefrenceNumberViewModel
+@using INZFS.MVC.ViewModels
+@using INZFS.MVC.Models
+@using INZFS.MVC.TagHelpers
+
+
+
+<input type="hidden" name="contentType" value="RefrenceNumber" />
+
+<div class="govuk-form-group" asp-validation-error-class-for="FundAbbvreviation">
+    <label class="govuk-label govuk-label--l" asp-for="FundAbbvreviation">
+    </label>
+    <span asp-validation-for="FundAbbvreviation" class="govuk-error-message"></span>
+    <input class="govuk-input govuk-input--width-10" asp-for="FundAbbvreviation" spellcheck="false" aria-describedby="name-hint">
+</div>
+
+<div class="govuk-form-group" asp-validation-error-class-for="FundRound">
+    <label class="govuk-label govuk-label--l" asp-for="FundRound">
+    </label>
+    <span asp-validation-for="FundRound" class="govuk-error-message"></span>
+    <input class="govuk-input govuk-input--width-10" asp-for="FundRound" spellcheck="false" aria-describedby="name-hint">
+</div>
+
+<div class="govuk-form-group" asp-validation-error-class-for="AutomatedNumber">
+    <label class="govuk-label govuk-label--l" asp-for="AutomatedNumber">
+    </label>
+    <span asp-validation-for="AutomatedNumber" class="govuk-error-message"></span>
+    <input class="govuk-input govuk-input--width-10" asp-for="AutomatedNumber" spellcheck="false" aria-describedby="name-hint">
+</div>
+

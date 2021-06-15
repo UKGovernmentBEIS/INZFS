@@ -7,6 +7,7 @@ using INZFS.MVC.Migrations;
 using INZFS.MVC.Migrations.ProposalFinance;
 using INZFS.MVC.Migrations.ProposalWritten;
 using INZFS.MVC.Models;
+using INZFS.MVC.Models.Core;
 using INZFS.MVC.Models.ProposalFinance;
 using INZFS.MVC.Models.ProposalWritten;
 using INZFS.MVC.Services;
@@ -27,7 +28,8 @@ using Microsoft.Extensions.Configuration;
 using INZFS.MVC.Handlers;
 using INZFS.MVC.Navigations;
 using OrchardCore.Navigation;
-
+using INZFS.MVC.Migrations.Core;
+using INZFS.MVC.Drivers.Core;
 
 namespace INZFS.MVC
 {
@@ -91,6 +93,10 @@ namespace INZFS.MVC
         private void ConfigureContent(IServiceCollection services)
         {
 
+            services.AddContentPart<RefrenceNumberPart>()
+            .UseDisplayDriver<RefrenceNumberDriver>();
+            services.AddScoped<IDataMigration, RefrenceNumberMigration>();
+
             services.AddContentPart<CompanyDetailsPart>()
             .UseDisplayDriver<CompanyDetailsDriver>();
             services.AddScoped<IDataMigration, CompanyDetailsMigration>();
@@ -98,6 +104,7 @@ namespace INZFS.MVC
             services.AddContentPart<ProjectSummaryPart>()
             .UseDisplayDriver<ProjectSummaryDriver>()
             .AddHandler<ProjectSummaryPartHandler>();
+
 
             services.AddScoped<IDataMigration, ProjectSummaryMigration>();
 
