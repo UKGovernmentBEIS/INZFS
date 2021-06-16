@@ -30,7 +30,9 @@ namespace INZFS.MVC.Migrations
                     ContentTypes.FinanceTurnover,
                     ContentTypes.FinanceBalanceSheet,
                     ContentTypes.FinanceRecoverVat,
-                    ContentTypes.FinanceBarriers }))
+                    ContentTypes.FinanceBarriers, 
+                    ContentTypes.RefrenceNumber
+                }))
         );
 
             return 1;

@@ -10,6 +10,9 @@ namespace INZFS.MVC.Forms
     {
         
         public const string INZFSApplicationContainer = "INZFSApplicationContainer";
+
+        public const string RefrenceNumber = "RefrenceNumber";
+
         public const string CompanyDetails = "CompanyDetails";
         public const string ProjectSummary = "ProjectSummaryPart";
         public const string ProjectDetails = "ProjectDetailsPart";
